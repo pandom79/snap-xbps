@@ -24,7 +24,7 @@ SHARE_DIR = $(DESTDIR)$(PREFIX)/share
 .PHONY: install
 
 install:
-	@install -Dm755 scripts/* -t $(SHARE_DIR)/xbps.d/scripts/
+	@install -Dm755 script/* -t $(SHARE_DIR)/xbps.d/scripts/
 	@install -Dm644 hooks/* -t $(SHARE_DIR)/xbps.d/hooks/
 	@install -Dm644 LICENSE -t $(SHARE_DIR)/licenses/$(PKGNAME)/
 	@install -Dm644 man8/* -t $(SHARE_DIR)/man/man8/
