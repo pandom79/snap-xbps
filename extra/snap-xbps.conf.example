@@ -1,0 +1,5 @@
+# snap-xbps example configuration file
+# See snap-xbps(8) for details
+
+ABORT_ON_FAIL="no"
+DESC_LIMIT="72"

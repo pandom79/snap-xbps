@@ -1,0 +1,152 @@
+#!/bin/bash
+
+# snap-xbps
+# https://github.com/pandom79/snap-xbps
+# Copyright (C) 2020 Domenico Panella
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+#COLOR
+WHITE='\e[1;37m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+set -o errtrace
+
+[[ -v SNAP_XBPS_SKIP ]] && { printf $YELLOW"skipping due to SNAP_XBPS_SKIP being set \n"$NC; exit 0; }
+
+readonly argv0="snap-xbps"
+readonly SNAPXBPS_CONFIG_FILE=/etc/snap-xbps.conf
+readonly SNAPPER_CONFIG_FILE=/etc/conf.d/snapper
+readonly PID_INSTALL="$(pidof xbps-install)"
+readonly PID_REMOVE="$(pidof xbps-remove)"
+if [ -n "$PID_INSTALL" ]; then 
+	CMD_INSTALL="$(ps -p $PID_INSTALL -o cmd --noheader)"
+fi
+if [ -n "$PID_REMOVE" ]; then 
+	CMD_REMOVE="$(ps -p $PID_REMOVE -o cmd --noheader)"
+fi
+readonly pre_or_post=$1
+
+
+read_config() {
+    CONFIG_FILE="$1"
+    if [[ -f "$CONFIG_FILE" ]] && [[ -r "$CONFIG_FILE" ]]; then
+        while IFS='= ' read lhs rhs; do
+            if [[ ! $lhs =~ ^\ *# && -n $lhs ]]; then
+                rhs="${rhs%%\#*}"
+                rhs="${rhs%%*( )}"
+                rhs="${rhs%\"*}"
+                rhs="${rhs#\"*}"
+                declare -g $lhs="$rhs"
+            fi
+        done < "$CONFIG_FILE"
+    fi
+}
+
+truncate_description() {
+    desc="$@"
+    if [[ "${#desc}" -gt $DESC_LIMIT ]]; then 
+        echo "$(echo $desc | cut -c 1-$DESC_LIMIT)..."
+    else
+        echo $desc
+    fi
+}
+
+out() { printf "$1 $2\n" "${@:3}"; }
+
+error() { out ":: \033[00;31merror:\033[00m" "$@"; } >&2
+
+die() { 
+	[[ $ABORT_ON_FAIL == "no" ]] && exit 0
+    exit 1
+}
+
+traperror() {
+    error "Exited due to error on line $1"
+    out "exit status:" "$2"
+    out "command:" "$3"
+    out "bash line:" "$4"
+    out "function argv0:" "$5"
+    die
+}
+
+trapkill() { 
+    error "Exited due to user intervention."
+    die
+}
+
+
+trap 'traperror ${LINENO} $? "$BASH_COMMAND" $BASH_LINENO "${FUNCNAME[@]}"' ERR
+trap trapkill SIGTERM SIGINT
+
+readonly -f read_config out error die trapkill traperror truncate_description
+
+SNAPPER_CONFIGS=$(awk -F'=' '/SNAPPER_CONFIGS/ {gsub(/"/, "", $2); print $2}' "$SNAPPER_CONFIG_FILE")
+
+read_config "$SNAPXBPS_CONFIG_FILE"
+
+readonly DESC_LIMIT=${DESC_LIMIT:-72}
+readonly ABORT_ON_FAIL=${ABORT_ON_FAIL:-"no"}
+
+for CONFIG in $SNAPPER_CONFIGS; do
+	
+	unset SNAPSHOT
+    unset PRE_DESCRIPTION
+    unset POST_DESCRIPTION
+    unset CLEANUP_ALGORITHM
+
+    read_config "/etc/snap-xbps/$CONFIG.conf"
+    
+	if [[ $CONFIG == "root" ]]; then 
+		SNAPSHOT=${SNAPSHOT:-"yes"}
+    else
+        SNAPSHOT=${SNAPSHOT:-"no"}
+    fi
+
+    if [ -n "$CMD_INSTALL" ]; then
+		PRE_DESCRIPTION=${PRE_DESCRIPTION:-"$CMD_INSTALL"}
+		POST_DESCRIPTION=${POST_DESCRIPTION:-"$CMD_INSTALL"}
+	elif [ -n "$CMD_REMOVE" ]; then
+		PRE_DESCRIPTION=${PRE_DESCRIPTION:-"$CMD_REMOVE"}
+		POST_DESCRIPTION=${POST_DESCRIPTION:-"$CMD_REMOVE"}
+	fi 
+    CLEANUP_ALGORITHM=${CLEANUP_ALGORITHM:-"number"}
+
+    
+	[[ $SNAPSHOT == "no" ]] && continue
+
+	    prefile="/tmp/$argv0-pre_$CONFIG"
+    if [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then
+        printf "Disabling dbus in snapper call since chroot detected.\n"
+        snapper_cmd="snapper --no-dbus --config $CONFIG create --type $pre_or_post --cleanup-algorithm $CLEANUP_ALGORITHM --print-number --description"
+    else
+        snapper_cmd="snapper --config $CONFIG create --type $pre_or_post --cleanup-algorithm $CLEANUP_ALGORITHM --print-number --description"
+    fi
+
+    if [[ "$pre_or_post" == "pre" ]]; then
+        x=$($snapper_cmd "$(truncate_description $PRE_DESCRIPTION)")
+        printf $WHITE":: %s: $(echo $x | tee "$prefile")\n" "$CONFIG"
+        printf $NC
+    elif [[ -f $prefile && "$pre_or_post" == "post" ]]; then
+        x=$($snapper_cmd "$(truncate_description $POST_DESCRIPTION)" --pre-number "$(< "$prefile")")
+        printf $WHITE":: %s: %s\n" "$CONFIG" "$x"
+        printf $NC
+        rm -f "$prefile"
+    fi
+
+done    
+
+exit 0

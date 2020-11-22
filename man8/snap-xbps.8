@@ -1,0 +1,118 @@
+'\" t
+.TH SNAP-XBPS 8 2020-11-22 SNAP-XBPS
+.SH NAME
+snap-xbps \- Xbps hooks that use snapper to create pre/post btrfs snapshots
+like openSUSE's YaST 
+
+.SH DESCRIPTION
+
+This is a set of \fIxbps\fR hooks and script that causes \fIsnapper\fR to
+automatically take a pre and post snapshot before and after xbps transactions,
+similar to how YaST does with OpenSuse. This provides a simple way to undo
+changes to a system after a xbps transaction.
+
+Because these are xbps hooks, snapper will create the
+snapshots when xbps installs, upgrades, or removes a package. 
+The xbps command used is logged in the snapper description for the snapshots.
+Additionally the snapshot numbers are output to the screen 
+for each snapper configuration during the xbps transaction.
+
+To undo changes from a xbps transaction, use \fIsnapper undochange\fR. See 
+\fBsnapper\fR(8) and the following example.
+
+If you have severe breakage—like snapper is gone for some reason and you can't
+get it back—you'll have to resort to more extreme methods, such as taking a
+snapshot of the pre snapshot and making it the default subvolume or mounting it
+as \fI/\fR. Most likely you'll need to use a live USB to get into a chroot
+environment to do any of these things. Snapper has a snapper rollback feature,
+but your setup has to be properly configured to use it. The exact procedure
+depends on your specific setup. Be careful.
+
+.SH CONFIGURATION
+Configuration is done via configuration files. The defaults of the
+following should be suitable for most users, so you may not need to do
+any configuration at all. Follow the pattern of bash shell variables
+(VAR=setting) in each configuration file below. Comments can be added
+by adding \fI#\fR before the comment. Example configuration files are
+located at \fI/etc/snap-xbps.conf.example\fR and
+\fI/etc/snap-xbps/root.conf.example\fR.
+
+The following settings can be changed in the main snap-xbps configuration file
+\fI/etc/snap-xbps.conf\fR:
+
+\fBABORT_ON_FAIL=\fR\fB\fIyes\fR\fR\fB or \fR\fB\fIno\fR\fR
+.RS 4
+When set to "yes" this causes xbps to abort a transaction if the snap-xbps pre
+hook fails.  This prevents an upgrade/installation/removal from occurring if a
+pre snapshot cannot be performed.
+
+Default is "no".
+.RE
+
+\fBDESC_LIMIT=\fR\fB\fIinteger\fR\fR
+.RS 4
+Number of characters to limit length of descriptions used for snapper.
+
+Default is "72".
+.RE
+
+The following are possible settings used on each specific snapper
+configuration you have. To use them, first create the folder
+\fI/etc/snap-xbps\fR if it does not already exist. Then create a file
+for the snapper configuration file you want these settings to apply
+to. For example, for the snapper configuration named \fIroot\fR,
+create the file \fI/etc/snap-xbps/root.conf\fR. \fIsnap-xbps\fR requires
+and expects configuration files to end in \fI.conf\fR.
+
+\fBSNAPSHOT=\fR\fB\fIyes\fR\fR\fB or \fR\fB\fIno\fR\fR
+.RS 4
+Perform xbps pre/post snapshots for this configuration. In other
+words, if you want snapper to run before and after a xbps
+transaction, set this to "yes".
+
+Default is "no", except for the root configuration which is "yes".
+.RE
+
+.BR CLEANUP_ALGORITHM
+.RS 4
+snapper algorithm used in cleaning up the xbps pre/post snapshots. See \fBsnapper\fR(8) for list of valid options.
+
+Default is "number". 
+.RE
+
+\fBPRE_DESCRIPTION=\fR\fB\fIstring\fR\fR
+.RS 4
+snapper description used for the xbps pre snapshot.
+
+Default is the parent program (usually xbps) that called the snapshot script.  
+.RE
+
+\fBPOST_DESCRIPTION=\fR\fB\fIstring\fR\fR
+.RS 4
+snapper description used for the xbps post snapshot.
+
+Default is the list of packages that were installed/upgraded/removed
+during the transaction.
+.RE
+
+.SH ENVIRONMENT VARIABLES
+
+To temporarily prevent snapshots from being performed for a single
+xbps command, set the environment variable \fISNAP_XBPS_SKIP\fR. For
+example:
+
+.EX
+
+    $ sudo SNAP_XBPS_SKIP=y xbps-install -Suy
+
+.EE
+
+.SH HOMEPAGE
+https://github.com/pandom79/snap-xbps
+
+.SH AUTHORS
+Domenico Panella <pandom79@gmail.com>
+
+.SH SEE ALSO
+.BR snapper (8),
+.BR snapper-configs (5),

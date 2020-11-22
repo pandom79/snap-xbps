@@ -1,0 +1,8 @@
+# snap-xbps example configuration file for a snapper config named "root"
+# See snap-xbps(8) for details
+
+SNAPSHOT="yes"
+CLEANUP_ALGORITHM="number"
+#PRE_DESCRIPTION="xbps pre root snapshot"
+#POST_DESCRIPTION="xbps post root snapshot"
+ 
