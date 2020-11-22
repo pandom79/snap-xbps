@@ -33,13 +33,12 @@ readonly SNAPPER_CONFIG_FILE=/etc/conf.d/snapper
 readonly PID_INSTALL="$(pidof xbps-install)"
 readonly PID_REMOVE="$(pidof xbps-remove)"
 if [ -n "$PID_INSTALL" ]; then 
-	CMD_INSTALL="$(ps -p $PID_INSTALL -o cmd --noheader)"
+    CMD_INSTALL="$(ps -p $PID_INSTALL -o cmd --noheader)"
 fi
 if [ -n "$PID_REMOVE" ]; then 
-	CMD_REMOVE="$(ps -p $PID_REMOVE -o cmd --noheader)"
+    CMD_REMOVE="$(ps -p $PID_REMOVE -o cmd --noheader)"
 fi
 readonly pre_or_post=$1
-
 
 read_config() {
     CONFIG_FILE="$1"
@@ -70,7 +69,7 @@ out() { printf "$1 $2\n" "${@:3}"; }
 error() { out ":: \033[00;31merror:\033[00m" "$@"; } >&2
 
 die() { 
-	[[ $ABORT_ON_FAIL == "no" ]] && exit 0
+    [[ $ABORT_ON_FAIL == "no" ]] && exit 0
     exit 1
 }
 
@@ -102,33 +101,33 @@ readonly DESC_LIMIT=${DESC_LIMIT:-72}
 readonly ABORT_ON_FAIL=${ABORT_ON_FAIL:-"no"}
 
 for CONFIG in $SNAPPER_CONFIGS; do
-	
-	unset SNAPSHOT
+
+    unset SNAPSHOT
     unset PRE_DESCRIPTION
     unset POST_DESCRIPTION
     unset CLEANUP_ALGORITHM
 
     read_config "/etc/snap-xbps/$CONFIG.conf"
     
-	if [[ $CONFIG == "root" ]]; then 
-		SNAPSHOT=${SNAPSHOT:-"yes"}
+    if [[ $CONFIG == "root" ]]; then 
+        SNAPSHOT=${SNAPSHOT:-"yes"}
     else
         SNAPSHOT=${SNAPSHOT:-"no"}
     fi
 
     if [ -n "$CMD_INSTALL" ]; then
-		PRE_DESCRIPTION=${PRE_DESCRIPTION:-"$CMD_INSTALL"}
-		POST_DESCRIPTION=${POST_DESCRIPTION:-"$CMD_INSTALL"}
-	elif [ -n "$CMD_REMOVE" ]; then
-		PRE_DESCRIPTION=${PRE_DESCRIPTION:-"$CMD_REMOVE"}
-		POST_DESCRIPTION=${POST_DESCRIPTION:-"$CMD_REMOVE"}
-	fi 
+        PRE_DESCRIPTION=${PRE_DESCRIPTION:-"$CMD_INSTALL"}
+        POST_DESCRIPTION=${POST_DESCRIPTION:-"$CMD_INSTALL"}
+    elif [ -n "$CMD_REMOVE" ]; then
+        PRE_DESCRIPTION=${PRE_DESCRIPTION:-"$CMD_REMOVE"}
+        POST_DESCRIPTION=${POST_DESCRIPTION:-"$CMD_REMOVE"}
+    fi
     CLEANUP_ALGORITHM=${CLEANUP_ALGORITHM:-"number"}
 
     
-	[[ $SNAPSHOT == "no" ]] && continue
+    [[ $SNAPSHOT == "no" ]] && continue
 
-	    prefile="/tmp/$argv0-pre_$CONFIG"
+    prefile="/tmp/$argv0-pre_$CONFIG"
     if [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then
         printf "Disabling dbus in snapper call since chroot detected.\n"
         snapper_cmd="snapper --no-dbus --config $CONFIG create --type $pre_or_post --cleanup-algorithm $CLEANUP_ALGORITHM --print-number --description"
