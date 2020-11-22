@@ -28,6 +28,6 @@ install:
 	@install -Dm644 hooks/* -t $(SHARE_DIR)/xbps.d/hooks/
 	@install -Dm644 LICENSE -t $(SHARE_DIR)/licenses/$(PKGNAME)/
 	@install -Dm644 man8/* -t $(SHARE_DIR)/man/man8/
-	@install -Dm644 README -t $(SHARE_DIR)/doc/$(PKGNAME)/
+	@install -Dm644 README.md -t $(SHARE_DIR)/doc/$(PKGNAME)/
 	@install -Dm644 extra/snap-xbps.conf.example -t $(DESTDIR)/etc/
 	@install -Dm644 extra/root.conf.example -t $(DESTDIR)/etc/snap-xbps/
