@@ -51,9 +51,7 @@ die() {
 
 read_config() {
     CONFIG_FILE="$1"
-echo "CONFIG_FILE--->$CONFIG_FILE"
     if [[ -f "$CONFIG_FILE" ]] && [[ -r "$CONFIG_FILE" ]]; then
-echo "CONFIG_FILE esiste!!"
         while IFS='= ' read lhs rhs; do
             if [[ ! $lhs =~ ^\ *# && -n $lhs ]]; then
                 rhs="${rhs%%\#*}"
@@ -97,7 +95,11 @@ readonly -f read_config out error die trapkill traperror truncate_description
 
 SNAPPER_CONFIGS=$(awk -F'=' '/SNAPPER_CONFIGS/ {gsub(/"/, "", $2); print $2}' "$SNAPPER_CONFIG_FILE")
 
-read_config "$SNAPXBPS_CONFIG_FILE"
+if [[ -f "$SNAPXBPS_CONFIG_FILE" ]] && [[ -r "$SNAPXBPS_CONFIG_FILE" ]]; then
+	read_config "$SNAPXBPS_CONFIG_FILE"
+else
+	error "$SNAPXBPS_CONFIG_FILE doesn't exist!"
+fi
 
 readonly DESC_LIMIT=${DESC_LIMIT:-72}
 readonly ABORT_ON_FAIL=${ABORT_ON_FAIL:-"no"}
@@ -109,45 +111,50 @@ for CONFIG in $SNAPPER_CONFIGS; do
     unset POST_DESCRIPTION
     unset CLEANUP_ALGORITHM
 
-    read_config "/etc/snap-xbps/$CONFIG.conf"
-    
-    if [[ $CONFIG == "root" ]]; then 
-        SNAPSHOT=${SNAPSHOT:-"yes"}
-    else
-        SNAPSHOT=${SNAPSHOT:-"no"}
-    fi
+    if [[ -f "/etc/snap-xbps/$CONFIG.conf" ]] && [[ -r "/etc/snap-xbps/$CONFIG.conf" ]]; then
+		read_config "/etc/snap-xbps/$CONFIG.conf"
+		
+		if [[ $CONFIG == "root" ]]; then 
+			SNAPSHOT=${SNAPSHOT:-"yes"}
+		else
+			SNAPSHOT=${SNAPSHOT:-"no"}
+		fi
 
-    if [ -n "$CMD_INSTALL" ]; then
-        PRE_DESCRIPTION=${PRE_DESCRIPTION:-"$CMD_INSTALL"}
-        POST_DESCRIPTION=${POST_DESCRIPTION:-"$CMD_INSTALL"}
-    elif [ -n "$CMD_REMOVE" ]; then
-        PRE_DESCRIPTION=${PRE_DESCRIPTION:-"$CMD_REMOVE"}
-        POST_DESCRIPTION=${POST_DESCRIPTION:-"$CMD_REMOVE"}
-    fi
-    CLEANUP_ALGORITHM=${CLEANUP_ALGORITHM:-"number"}
+		if [ -n "$CMD_INSTALL" ]; then
+			PRE_DESCRIPTION=${PRE_DESCRIPTION:-"$CMD_INSTALL"}
+			POST_DESCRIPTION=${POST_DESCRIPTION:-"$CMD_INSTALL"}
+		elif [ -n "$CMD_REMOVE" ]; then
+			PRE_DESCRIPTION=${PRE_DESCRIPTION:-"$CMD_REMOVE"}
+			POST_DESCRIPTION=${POST_DESCRIPTION:-"$CMD_REMOVE"}
+		fi
+		CLEANUP_ALGORITHM=${CLEANUP_ALGORITHM:-"number"}
 
-    
-    [[ $SNAPSHOT == "no" ]] && continue
+		
+		[[ $SNAPSHOT == "no" ]] && continue
 
-    prefile="/tmp/$argv0-pre_$CONFIG"
-    if [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then
-        printf "Disabling dbus in snapper call since chroot detected.\n"
-        snapper_cmd="snapper --no-dbus --config $CONFIG create --type $pre_or_post --cleanup-algorithm $CLEANUP_ALGORITHM --print-number --description"
-    else
-        snapper_cmd="snapper --config $CONFIG create --type $pre_or_post --cleanup-algorithm $CLEANUP_ALGORITHM --print-number --description"
-    fi
+		prefile="/tmp/$argv0-pre_$CONFIG"
+		if [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then
+			printf "Disabling dbus in snapper call since chroot detected.\n"
+			snapper_cmd="snapper --no-dbus --config $CONFIG create --type $pre_or_post --cleanup-algorithm $CLEANUP_ALGORITHM --print-number --description"
+		else
+			snapper_cmd="snapper --config $CONFIG create --type $pre_or_post --cleanup-algorithm $CLEANUP_ALGORITHM --print-number --description"
+		fi
 
-    if [[ "$pre_or_post" == "pre" ]]; then
-        x=$($snapper_cmd "$(truncate_description $PRE_DESCRIPTION)")
-        printf $WHITE":: %s: $(echo $x | tee "$prefile")\n" "$CONFIG"
-        printf $NC
-    elif [[ -f $prefile && "$pre_or_post" == "post" ]]; then
-        x=$($snapper_cmd "$(truncate_description $POST_DESCRIPTION)" --pre-number "$(< "$prefile")")
-        printf $WHITE":: %s: %s\n" "$CONFIG" "$x"
-        printf $NC
-        rm -f "$prefile"
-    fi
-
+		if [[ "$pre_or_post" == "pre" ]]; then
+			x=$($snapper_cmd "$(truncate_description $PRE_DESCRIPTION)")
+			printf $WHITE":: %s: $(echo $x | tee "$prefile")\n" "$CONFIG"
+			printf $NC
+		elif [[ -f $prefile && "$pre_or_post" == "post" ]]; then
+			x=$($snapper_cmd "$(truncate_description $POST_DESCRIPTION)" --pre-number "$(< "$prefile")")
+			printf $WHITE":: %s: %s\n" "$CONFIG" "$x"
+			printf $NC
+			rm -f "$prefile"
+		fi
+	else
+		if [[ $CONFIG == "root" ]]; then 
+			error "/etc/snap-xbps/$CONFIG.conf doesn't exist!"
+		fi
+	fi
 done    
 
 exit 0
