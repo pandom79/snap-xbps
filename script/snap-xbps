@@ -97,8 +97,6 @@ SNAPPER_CONFIGS=$(awk -F'=' '/SNAPPER_CONFIGS/ {gsub(/"/, "", $2); print $2}' "$
 
 if [[ -f "$SNAPXBPS_CONFIG_FILE" ]] && [[ -r "$SNAPXBPS_CONFIG_FILE" ]]; then
 	read_config "$SNAPXBPS_CONFIG_FILE"
-else
-	error "$SNAPXBPS_CONFIG_FILE doesn't exist!"
 fi
 
 readonly DESC_LIMIT=${DESC_LIMIT:-72}
@@ -149,10 +147,6 @@ for CONFIG in $SNAPPER_CONFIGS; do
 			printf $WHITE":: %s: %s\n" "$CONFIG" "$x"
 			printf $NC
 			rm -f "$prefile"
-		fi
-	else
-		if [[ $CONFIG == "root" ]]; then 
-			error "/etc/snap-xbps/$CONFIG.conf doesn't exist!"
 		fi
 	fi
 done    
