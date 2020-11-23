@@ -7,7 +7,23 @@ system after a xbps transaction.
 
 **INSTALLATION**
 
-Install the "snap-xbps" package using xbps.
+Install the "snap-xbps" package using xbps of which attach a xbps-src template :
+```
+# Template file for 'snap-xbps'
+pkgname=snap-xbps
+version=1.0
+revision=1
+wrksrc="${pkgname}"
+build_style=gnu-makefile
+depends="bash snapper xbps btrfs-progs procps-ng"
+short_desc="Xbps hooks that use snapper to create pre/post btrfs snapshots"
+maintainer="Domenico Panella <pandom79@gmail.com>"
+license="GPL-2.0-or-later"
+homepage="https://github.com/pandom79/snap-xbps"
+distfiles="https://github.com/pandom79/${pkgname}/releases/download/${version}/${pkgname}-${version}.tar.gz"
+checksum=ba71f8d01d665c7c3ce5a293a5a7773c9196dec21295ba525a428c7f67d34262
+
+```
 
 Alternatively download the latest release from
 https://github.com/pandom79/snap-xbps/releases, and then
