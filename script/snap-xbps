@@ -109,7 +109,7 @@ for CONFIG in $SNAPPER_CONFIGS; do
     unset POST_DESCRIPTION
     unset CLEANUP_ALGORITHM
 
-    if [[ -f "/etc/snap-xbps/$CONFIG.conf" ]] && [[ -r "/etc/snap-xbps/$CONFIG.conf" ]]; then
+    if [ -r "/etc/snap-xbps/$CONFIG.conf" ]; then
 		read_config "/etc/snap-xbps/$CONFIG.conf"
 		
 		if [[ $CONFIG == "root" ]]; then 
