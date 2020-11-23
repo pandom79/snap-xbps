@@ -24,4 +24,5 @@ Operation = Remove
 [Action]
 Description = Performing snapper post snapshots for the following configurations...
 When = PostTransaction
-Exec = /usr/share/xbps.d/scripts/snap-xbps post
+Exec = /usr/bin/bash -c "if [ -r '/usr/share/xbps.d/scripts/snap-xbps' ]; then exec /usr/share/xbps.d/scripts/snap-xbps post; fi"
+
