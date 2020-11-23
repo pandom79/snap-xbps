@@ -7,7 +7,7 @@ system after a xbps transaction.
 
 **INSTALLATION**
 
-Install the "snap-xbps" package using xbps of which attach a xbps-src template :
+Install the "snap-xbps" package using xbps of which attach a xbps-src template :  
 *(just an example, could be required change the checksum...)*
 
 ```
