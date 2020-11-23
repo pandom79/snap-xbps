@@ -1,7 +1,7 @@
 **SYNOPSIS**
 
 This is a set of xbps hooks and script that automatically causes snapper to
-perform a pre and post snapshot before and after pacman transactions, similar to
+perform a pre and post snapshot before and after xbps transactions, similar to
 how YaST does with OpenSuse. This provides a simple way to undo changes to a
 system after a xbps transaction.
 
