@@ -107,6 +107,82 @@ example:
 
 .EE
 
+.SH EXAMPLE
+
+Installing the nano package as normal:
+
+.EX
+
+    # xbps-install -S nano
+
+	.....
+	.....
+
+	[*] Verifying package integrity
+	nano-5.3_1: verifying RSA signature...
+
+	[*] Collecting package files
+	nano-5.3_1: collecting files...
+
+	[*] Executing pre transaction hooks
+	==> 00_snapper-pre.hook: executing ...
+	Performing snapper pre snapshots for the following configurations... 
+	:: root: 523
+	==> 00_snapper-pre.hook: executed successfully.
+
+	[*] Unpacking packages
+	nano-5.3_1: unpacking ...
+
+	[*] Configuring unpacked packages
+	nano-5.3_1: configuring ...
+	nano-5.3_1: installed successfully.
+
+	[*] Executing post transaction hooks
+	==> zz_snapper-post.hook: executing ...
+	Performing snapper post snapshots for the following configurations... 
+	:: root: 524
+	==> zz_snapper-post.hook: executed successfully.
+
+	0 downloaded, 1 installed, 0 updated, 1 configured, 0 removed, 0 on hold.
+
+	
+Installing the nano package with SNAP_XBPS_SKIP=y :
+	
+.EX
+
+    # SNAP_XBPS_SKIP=y xbps-install -S nano
+
+	.....
+	.....
+
+	[*] Verifying package integrity
+	nano-5.3_1: verifying RSA signature...
+
+	[*] Collecting package files
+	nano-5.3_1: collecting files...
+
+	[*] Executing pre transaction hooks
+	==> 00_snapper-pre.hook: executing ...
+	Performing snapper pre snapshots for the following configurations... 
+	skipping due to SNAP_XBPS_SKIP being set 
+	==> 00_snapper-pre.hook: executed successfully.
+
+	[*] Unpacking packages
+	nano-5.3_1: unpacking ...
+
+	[*] Configuring unpacked packages
+	nano-5.3_1: configuring ...
+	nano-5.3_1: installed successfully.
+
+	[*] Executing post transaction hooks
+	==> zz_snapper-post.hook: executing ...
+	Performing snapper post snapshots for the following configurations... 
+	skipping due to SNAP_XBPS_SKIP being set 
+	==> zz_snapper-post.hook: executed successfully.
+
+	0 downloaded, 1 installed, 0 updated, 1 configured, 0 removed, 0 on hold.
+
+
 .SH HOMEPAGE
 https://github.com/pandom79/snap-xbps
 
