@@ -23,7 +23,7 @@ maintainer="Domenico Panella <pandom79@gmail.com>"
 license="GPL-2.0-or-later"
 homepage="https://github.com/pandom79/snap-xbps"
 distfiles="https://github.com/pandom79/${pkgname}/releases/download/${version}/${pkgname}-${version}.tar.gz"
-checksum=ba71f8d01d665c7c3ce5a293a5a7773c9196dec21295ba525a428c7f67d34262
+checksum=d12a29284982719cb3a5aa5a50efbb690d2400d3ae22965c55d07f9ccdf5b29a
 
 ```
 
