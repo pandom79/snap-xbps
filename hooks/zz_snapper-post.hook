@@ -20,6 +20,8 @@
 Operation = Upgrade
 Operation = Install
 Operation = Remove
+Type = Package
+Target = *
 
 [Action]
 Description = Performing snapper post snapshots for the following configurations...
